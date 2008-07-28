@@ -1,6 +1,5 @@
 local db
 local _G = getfenv(0)
-local LibSimpleOptions = LibStub("LibSimpleOptions-1.0")
 local c = RAID_CLASS_COLORS[select(2, UnitClass("player"))]
 
 local function Options(self)
@@ -11,6 +10,13 @@ local function Options(self)
 		'description', "Set text color based on player class",
 		'func', function() db.r = c.r db.g = c.g db.b = c.b self:Refresh() end)
 	class:SetPoint("TOPLEFT", subText, "BOTTOMLEFT", 0, -8)
+
+--[[	local predefined = self:MakeDropDown(
+		'name', "Pre-defined colors",
+		'description', "Set the text color based on a list of pre-defined colors",
+		'values', {},
+		'setFunc', function(value) end)
+	predefined:SetPoint("TOPLEFT", class, "BOTTOMLEFT", 0, -8)]]
 
 	local custom = self:MakeColorPicker(
 		'name', "Custom Color",
@@ -30,19 +36,27 @@ local function Options(self)
 		'current', db.help,
 		'setFunc', function(value) db.help = value end)
 	help:SetPoint("TOPLEFT", custom, "BOTTOMLEFT", 0, -8)
+
+	local sortcheck = self:MakeToggle(
+		'name', "Toggle sorting method",
+		'description', "Check to sort by memory.\nUn-check to sort by name",
+		'default', true,
+		'current', db.sorted,
+		'setFunc', function(value) db.sorted = value end)
+	sortcheck:SetPoint("TOPLEFT", help, "BOTTOMLEFT", 0, -8)
 end
 
 local function OnEvent(self, name)
 	if(name == "pStats") then
 		db = _G.pStatsDB
 		if(not db) then
-			db = { r = 0, g = 1, b = 1, help = true }
+			db = { r = 0, g = 1, b = 1, help = true, sorted = true }
 			_G.pStatsDB = db
 		end
 
 		-- setup options
-		LibSimpleOptions.AddOptionsPanel("pStats", Options)
-		LibSimpleOptions.AddSlashCommand("pStats", "/pstats")
+		LibStub("LibSimpleOptions-1.0").AddOptionsPanel("pStats", Options)
+		LibStub("LibSimpleOptions-1.0").AddSlashCommand("pStats", "/pstats")
 
 		self:UnregisterEvent("ADDON_LOADED")
 	end

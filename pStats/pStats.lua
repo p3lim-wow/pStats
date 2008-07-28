@@ -7,7 +7,23 @@ local function formats(num)
 	end
 end
 
-local function gradient(num) end
+local function ColorGradient(perc, ...)
+	if perc >= 1 then
+		local r, g, b = select(select('#', ...) - 2, ...)
+		return r, g, b
+	elseif perc <= 0 then
+		local r, g, b = ...
+		return r, g, b
+	end
+	
+	local num = select('#', ...) / 3
+
+	local segment, relperc = math.modf(perc*(num-1))
+	local r1, g1, b1, r2, g2, b2 = select((segment*3)+1, ...)
+
+	return r1 + (r2-r1)*relperc, g1 + (g2-g1)*relperc, b1 + (b2-b1)*relperc
+end
+
 
 local function GarbageTooltip_Show(self)
 	GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 0, self:GetHeight())
@@ -47,11 +63,14 @@ local function OnEnter(self)
 			total = total + GetAddOnMemoryUsage(i)
 		end
 	end
-	-- todo: sort by name
-	table.sort(addons, compare)
+
+	if(db.sorted) then
+		table.sort(addons, compare)
+	end
 
 	for _,entry in pairs(addons) do
-		GameTooltip:AddDoubleLine(entry.name, formats(entry.memory), 1, 1, 1, 1, 1, 1)
+		local r, g, b = ColorGradient((entry.memory / 800), 0, 1, 0, 1, 1, 0, 1, 0, 0)
+		GameTooltip:AddDoubleLine(entry.name, formats(entry.memory), 1, 1, 1, r, g, b)
 	end
 
 	GameTooltip:AddLine("\n")
