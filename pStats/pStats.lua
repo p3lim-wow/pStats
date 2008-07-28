@@ -1,11 +1,13 @@
 local function compare(a, b) return a.memory > b.memory end
 local function formats(num)
 	if(num > 999) then
-		return format("%.1f mb", num / 1024)
+		return format("%.1f MiB", num / 1024)
 	else
-		return format("%.1f kb", num)
+		return format("%.1f KiB", num)
 	end
 end
+
+local function gradient(num) end
 
 local function GarbageTooltip_Show(self)
 	GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 0, self:GetHeight())
@@ -37,6 +39,7 @@ local function OnEnter(self)
 	local addons, entry, total = {}, {}, 0
 	UpdateAddOnMemoryUsage()
 
+	-- todo: mem color by gradient green-yellow-red
 	for i = 1, GetNumAddOns(), 1 do
 		if IsAddOnLoaded(i) then
 			entry = {name = GetAddOnInfo(i), memory = GetAddOnMemoryUsage(i)}
@@ -44,6 +47,7 @@ local function OnEnter(self)
 			total = total + GetAddOnMemoryUsage(i)
 		end
 	end
+	-- todo: sort by name
 	table.sort(addons, compare)
 
 	for _,entry in pairs(addons) do
