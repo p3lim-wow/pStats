@@ -7,24 +7,6 @@ local function formats(num)
 	end
 end
 
-local function ColorGradient(perc, ...)
-	if perc >= 1 then
-		local r, g, b = select(select('#', ...) - 2, ...)
-		return r, g, b
-	elseif perc <= 0 then
-		local r, g, b = ...
-		return r, g, b
-	end
-	
-	local num = select('#', ...) / 3
-
-	local segment, relperc = math.modf(perc*(num-1))
-	local r1, g1, b1, r2, g2, b2 = select((segment*3)+1, ...)
-
-	return r1 + (r2-r1)*relperc, g1 + (g2-g1)*relperc, b1 + (b2-b1)*relperc
-end
-
-
 local function GarbageTooltip_Show(self)
 	GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 0, self:GetHeight())
 	GameTooltip:AddLine("Garbage collected!")
@@ -55,10 +37,9 @@ local function OnEnter(self)
 	local addons, entry, total = {}, {}, 0
 	UpdateAddOnMemoryUsage()
 
-	-- todo: mem color by gradient green-yellow-red
-	for i = 1, GetNumAddOns(), 1 do
+	for i = 1, GetNumAddOns() do
 		if IsAddOnLoaded(i) then
-			entry = {name = GetAddOnInfo(i), memory = GetAddOnMemoryUsage(i)}
+			entry = {name = GetAddOnInfo(i), mem = GetAddOnMemoryUsage(i)}
 			table.insert(addons, entry)
 			total = total + GetAddOnMemoryUsage(i)
 		end
@@ -69,8 +50,7 @@ local function OnEnter(self)
 	end
 
 	for _,entry in pairs(addons) do
-		local r, g, b = ColorGradient((entry.memory / 800), 0, 1, 0, 1, 1, 0, 1, 0, 0)
-		GameTooltip:AddDoubleLine(entry.name, formats(entry.memory), 1, 1, 1, r, g, b)
+		GameTooltip:AddDoubleLine(entry.name, format("|cff%s%s|r", LibStub("LibCrayon-3.0"):GetThresholdHexColor(entry.mem, 1024, 640, 320, 180, 0), formats(entry.mem)), 1, 1, 1)
 	end
 
 	GameTooltip:AddLine("\n")
