@@ -1,4 +1,4 @@
-local function compare(a, b) return a.memory > b.memory end
+local function compare(a, b) return a.mem > b.mem end
 local function formats(num)
 	if(num > 999) then
 		return format("%.1f MiB", num / 1024)

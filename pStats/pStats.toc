@@ -8,7 +8,7 @@
 
 libs\LibSimpleOptions-1.0\LibStub\LibStub.lua
 libs\LibSimpleOptions-1.0\lib.xml
-libs\LibCrayon\lib.xml
+libs\LibCrayon-3.0\lib.xml
 
 pStats.lua
 pStatsConfig.lua
