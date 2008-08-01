@@ -38,7 +38,7 @@ local function OnEnter(self)
 	UpdateAddOnMemoryUsage()
 
 	for i = 1, GetNumAddOns() do
-		if IsAddOnLoaded(i) then
+		if(IsAddOnLoaded(i)) then
 			entry = {name = GetAddOnInfo(i), mem = GetAddOnMemoryUsage(i)}
 			table.insert(addons, entry)
 			total = total + GetAddOnMemoryUsage(i)
