@@ -1,3 +1,4 @@
+local wotlk = select(4, GetBuildInfo()) >= 3e4
 local function compare(a, b) return a.mem > b.mem end
 local function formats(num)
 	if(num > 999) then
@@ -7,19 +8,13 @@ local function formats(num)
 	end
 end
 
-local function GarbageTooltip_Show(self)
-	GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 0, self:GetHeight())
-	GameTooltip:AddLine("Garbage collected!")
-	GameTooltip:Show()
-end
-
-local function OnMouseUp(self, button)
-	if(GameTooltip:GetOwner() == self) then GameTooltip:Hide() end
+local function OnClick(self, button)
+	if(wotlk and GameTooltip:GetOwner() == self) then GameTooltip:Hide() end
 	if(button == "RightButton") then
-		GarbageTooltip_Show(self)
 		collectgarbage("collect")
-	elseif(button == "MiddleButton") then
-		GameTimeFrame_OnClick()
+		GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 0, self:GetHeight())
+		GameTooltip:AddLine("Garbage collected!")
+		GameTooltip:Show()
 	else
 		ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, "MiniMapTracking", 0, self:GetHeight())
 	end
@@ -49,24 +44,23 @@ local function OnEnter(self)
 		table.sort(addons, compare)
 	end
 
-	for _,entry in pairs(addons) do
+	for _,entry in pairs(addons) do -- the following coloring seems to be broken in wotlk, lib issue
 		GameTooltip:AddDoubleLine(entry.name, format("|cff%s%s|r", LibStub("LibCrayon-3.0"):GetThresholdHexColor(entry.mem, 1024, 640, 320, 180, 0), formats(entry.mem)), 1, 1, 1)
 	end
 
 	GameTooltip:AddLine("\n")
 	GameTooltip:AddDoubleLine("Total", formats(total), db.r, db.g, db.b, db.r, db.g, db.b)
-	GameTooltip:AddDoubleLine("Total w/Blizzard", formats(gcinfo()), db.r, db.g, db.b, db.r, db.g, db.b)
-
-	if(db.help) then
-		GameTooltip:AddLine("\n")
-		GameTooltip:AddLine("Middle-Click to toggle time settings")
-		GameTooltip:AddLine("Right-Click to force garbage collection")
-		GameTooltip:AddLine("Left-Click to choose tracking type")
-	end
+	GameTooltip:AddDoubleLine("Total + Blizzard", formats(gcinfo()), db.r, db.g, db.b, db.r, db.g, db.b)
 
 	GameTooltip:Show()
 end
 
 -- hijack the MiniMapTracking frame
-MiniMapTracking:SetScript("OnMouseUp", OnMouseUp)
-MiniMapTracking:SetScript("OnEnter", OnEnter)
+if(wotlk) then
+	MiniMapTrackingButton:RegisterForClicks("AnyUp")
+	MiniMapTrackingButton:SetScript("OnClick", OnClick)
+	MiniMapTrackingButton:SetScript("OnEnter", OnEnter)
+else
+	MiniMapTracking:SetScript("OnMouseUp", OnClick)
+	MiniMapTracking:SetScript("OnEnter", OnEnter)
+end

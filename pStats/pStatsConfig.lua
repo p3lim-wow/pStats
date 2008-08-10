@@ -11,13 +11,6 @@ local function Options(self)
 		'func', function() db.r = c.r db.g = c.g db.b = c.b self:Refresh() end)
 	class:SetPoint("TOPLEFT", subText, "BOTTOMLEFT", 0, -8)
 
---[[	local predefined = self:MakeDropDown(
-		'name', "Pre-defined colors",
-		'description', "Set the text color based on a list of pre-defined colors",
-		'values', {},
-		'setFunc', function(value) end)
-	predefined:SetPoint("TOPLEFT", class, "BOTTOMLEFT", 0, -8)]]
-
 	local custom = self:MakeColorPicker(
 		'name', "Custom Color",
 		'description', "Set custom text colors with a palette",
@@ -28,14 +21,6 @@ local function Options(self)
 		'getFunc', function() return db.r, db.g, db.b end,
 		'setFunc', function(r, g, b) db.r = r db.g = g db.b = b end)
 	custom:SetPoint("TOPLEFT", class, "BOTTOMLEFT", 0, -8)
-
-	local help = self:MakeToggle(
-		'name', "Toggle Help Lines",
-		'description', "Set whether the 3 help lines in the tooltip are shown or not",
-		'default', true,
-		'current', db.help,
-		'setFunc', function(value) db.help = value end)
-	help:SetPoint("TOPLEFT", custom, "BOTTOMLEFT", 0, -8)
 
 	local sortcheck = self:MakeToggle(
 		'name', "Toggle sorting method",
@@ -50,7 +35,7 @@ local function OnEvent(self, name)
 	if(name == "pStats") then
 		db = _G.pStatsDB
 		if(not db) then
-			db = { r = 0, g = 1, b = 1, help = true, sorted = true }
+			db = { r = 0, g = 1, b = 1, sorted = true }
 			_G.pStatsDB = db
 		end
 
