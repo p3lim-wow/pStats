@@ -9,7 +9,7 @@ local function formats(num)
 end
 
 local function OnClick(self, button)
-	if(wotlk and GameTooltip:GetOwner() == self) then GameTooltip:Hide() end
+	if(GameTooltip:GetOwner() == self) then GameTooltip:Hide() end
 	if(button == "RightButton") then
 		collectgarbage("collect")
 		GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT", 0, self:GetHeight())
