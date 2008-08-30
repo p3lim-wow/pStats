@@ -28,7 +28,7 @@ local function Options(self)
 		'default', true,
 		'current', db.sorted,
 		'setFunc', function(value) db.sorted = value end)
-	sortcheck:SetPoint("TOPLEFT", help, "BOTTOMLEFT", 0, -8)
+	sortcheck:SetPoint("TOPLEFT", custom, "BOTTOMLEFT", 0, -8)
 end
 
 local function OnEvent(self, name)
