@@ -3,12 +3,11 @@
 ## Version: Revision wowi:revision
 ## Title: |cffff6000p|rStats
 ## Notes: Replaces the tooltip on MinimapTracking with a more informative one
-## OptionalDeps: LibSimpleOptions-1.0, LibCrayon-3.0
+## OptionalDeps: LibSimpleOptions-1.0
 ## SavedVariablesPerCharacter: pStatsDB
 
-libs\LibSimpleOptions-1.0\LibStub\LibStub.lua
-libs\LibSimpleOptions-1.0\lib.xml
-libs\LibCrayon-3.0\lib.xml
+LibSimpleOptions-1.0\LibStub\LibStub.lua
+LibSimpleOptions-1.0\lib.xml
 
 pStats.lua
 pStatsConfig.lua
