@@ -7,14 +7,15 @@ local function formats(value)
 end
 
 local function OnEnter(self)
-	local db = _G.pStatsDB
+	local db = pStatsDB
+	local r, g, b = unpack(db.colors)
 	local down, up, latency = GetNetStats()
 	local fps = format('%.1f fps', GetFramerate())
 	local net = format('%d ms', latency)
 
 	GameTooltip:SetOwner(self, 'ANCHOR_BOTTOMLEFT', 0, self:GetHeight())
 	GameTooltip:ClearLines()
-	GameTooltip:AddDoubleLine(fps, net, db.r, db.g, db.b, db.r, db.g, db.b)
+	GameTooltip:AddDoubleLine(fps, net, r, g, b, r, g, b)
 	GameTooltip:AddLine('\n')
 
 	local addons, entry, total = {}, {}, 0
@@ -37,9 +38,9 @@ local function OnEnter(self)
 	end
 
 	GameTooltip:AddLine('\n')
-	GameTooltip:AddDoubleLine('User Addon Memory Usage:', formats(total), db.r, db.g, db.b, db.r, db.g, db.b)
-	GameTooltip:AddDoubleLine('Default UI Memory Usage:', formats(gcinfo() - total), db.r, db.g, db.b, db.r, db.g, db.b)
-	GameTooltip:AddDoubleLine('Total Memory Usage:', formats(gcinfo()), db.r, db.g, db.b, db.r, db.g, db.b)
+	GameTooltip:AddDoubleLine('User Addon Memory Usage:', formats(total), r, g, b, r, g, b)
+	GameTooltip:AddDoubleLine('Default UI Memory Usage:', formats(gcinfo() - total), r, g, b, r, g, b)
+	GameTooltip:AddDoubleLine('Total Memory Usage:', formats(gcinfo()), r, g, b, r, g, b)
 
 	GameTooltip:Show()
 end
@@ -49,7 +50,7 @@ local function OnClick(self, button)
 		local collected = collectgarbage('count')
 		collectgarbage('collect')
 		OnEnter(self)
-		GameTooltip:AddLine('')
+		GameTooltip:AddLine('\n')
 		GameTooltip:AddDoubleLine('Garbage Collected:', formats(collected - collectgarbage('count')))
 		GameTooltip:Show()
 	else
@@ -62,38 +63,33 @@ local function OnMouseWheel(self, dir)
 	GameTooltip:SetClampedToScreen(false)
 	local point, region, pointTo, x, y = GameTooltip:GetPoint()
 	if(dir > 0) then
-		if(IsShiftKeyDown()) then
-			GameTooltip:SetPoint(point, region, pointTo, x, y + 30)
-		else
-			GameTooltip:SetPoint(point, region, pointTo, x, y + 15)
-		end
+		GameTooltip:SetPoint(point, region, pointTo, x, y + (IsShiftKeyDown() and 30 or 15))
 	else
-		if(IsShiftKeyDown()) then
-			GameTooltip:SetPoint(point, region, pointTo, x, y - 30)
-		else
-			GameTooltip:SetPoint(point, region, pointTo, x, y - 15)
-		end
+		GameTooltip:SetPoint(point, region, pointTo, x, y - (IsShiftKeyDown() and 30 or 15))
 	end
 end
 
-local wotlk = select(4, GetBuildInfo()) >= 3e4
-if(wotlk) then
-	MiniMapTrackingButton:RegisterForClicks('AnyUp')
-	MiniMapTrackingButton:SetScript('OnClick', OnClick)
+if(select(4, GetBuildInfo()) >= 3e4) then
 	MiniMapTrackingButton:EnableMouseWheel(true)
+	MiniMapTrackingButton:RegisterForClicks('AnyUp')
+	MiniMapTrackingButton:RegisterEvent('PLAYER_ENTERING_WORLD')
+	MiniMapTrackingButton:SetScript('OnEvent', function(self, event, ...) self[event](self, event, ...) end)
 	MiniMapTrackingButton:SetScript('OnMouseWheel', OnMouseWheel)
+	MiniMapTrackingButton:SetScript('OnClick', OnClick)
 	MiniMapTrackingButton:SetScript('OnEnter', OnEnter)
 	MiniMapTrackingButton:SetScript('OnLeave', function()
 		GameTooltip:SetClampedToScreen(true)
 		GameTooltip:Hide()
 	end)
 else
-	MiniMapTracking:SetScript('OnMouseUp', OnClick)
 	MiniMapTracking:EnableMouseWheel(true)
+	MiniMapTracking:RegisterEvent('PLAYER_ENTERING_WORLD')
+	MiniMapTracking:SetScript('OnEvent', function(self, event, ...) self[event](self, event, ...) end)
 	MiniMapTracking:SetScript('OnMouseWheel', OnMouseWheel)
+	MiniMapTracking:SetScript('OnMouseUp', OnClick)
 	MiniMapTracking:SetScript('OnEnter', OnEnter)
 	MiniMapTracking:SetScript('OnLeave', function()
 		GameTooltip:SetClampedToScreen(true)
-		GameTooltip:FadeOut()
+		GameTooltip:Hide()
 	end)
 end
