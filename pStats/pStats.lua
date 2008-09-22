@@ -72,8 +72,6 @@ end
 if(select(4, GetBuildInfo()) >= 3e4) then
 	MiniMapTrackingButton:EnableMouseWheel(true)
 	MiniMapTrackingButton:RegisterForClicks('AnyUp')
-	MiniMapTrackingButton:RegisterEvent('PLAYER_ENTERING_WORLD')
-	MiniMapTrackingButton:SetScript('OnEvent', function(self, event, ...) self[event](self, event, ...) end)
 	MiniMapTrackingButton:SetScript('OnMouseWheel', OnMouseWheel)
 	MiniMapTrackingButton:SetScript('OnClick', OnClick)
 	MiniMapTrackingButton:SetScript('OnEnter', OnEnter)
@@ -83,8 +81,6 @@ if(select(4, GetBuildInfo()) >= 3e4) then
 	end)
 else
 	MiniMapTracking:EnableMouseWheel(true)
-	MiniMapTracking:RegisterEvent('PLAYER_ENTERING_WORLD')
-	MiniMapTracking:SetScript('OnEvent', function(self, event, ...) self[event](self, event, ...) end)
 	MiniMapTracking:SetScript('OnMouseWheel', OnMouseWheel)
 	MiniMapTracking:SetScript('OnMouseUp', OnClick)
 	MiniMapTracking:SetScript('OnEnter', OnEnter)

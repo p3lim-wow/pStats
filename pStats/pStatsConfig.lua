@@ -34,7 +34,7 @@ local function CreateOptions(self, db)
 	):SetPoint('TOPLEFT', sub, 'BOTTOMLEFT', 0, -76)
 end
 
-function MiniMapTracking:PLAYER_ENTERING_WORLD(event)
+local function OnEvent(self, event)
 	local db = pStatsDB or {colors = {0, 1, 1}, sorted = true}
 
 	LibStub('LibSimpleOptions-1.0').AddOptionsPanel('pStats', function(self) CreateOptions(self, db) end)
@@ -44,3 +44,7 @@ function MiniMapTracking:PLAYER_ENTERING_WORLD(event)
 
 	pStatsDB = db
 end
+
+local addon = CreateFrame('Frame')
+addon:RegisterEvent('PLAYER_ENTERING_WORLD')
+addon:SetScript('OnEvent', OnEvent)
