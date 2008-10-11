@@ -6,7 +6,22 @@ local function formats(value)
 	end
 end
 
-local function OnEnter(self)
+local dataobj, elapsed = LibStub:GetLibrary('LibDataBroker-1.1'):NewDataObject('Stats', {text = '2.0 MiB', icon = [=[Interface\AddOns\pStats\icon]=]}), 0.5
+
+CreateFrame('Frame'):SetScript('OnUpdate', function(self, al)
+	elapsed = elapsed + al
+	if(elapsed > 0.5) then
+		dataobj.text = formats(gcinfo())
+		elapsed = 0
+	end
+end)
+
+function dataobj.OnLeave()
+	GameTooltip:SetClampedToScreen(true)
+	GameTooltip:Hide()
+end
+
+function dataobj.OnEnter(self)
 	local db = pStatsDB
 	local r, g, b = unpack(db.colors)
 	local down, up, latency = GetNetStats()
@@ -45,16 +60,24 @@ local function OnEnter(self)
 	GameTooltip:Show()
 end
 
-local function OnClick(self, button)
+local function collect(self)
+
+end
+
+function dataobj.OnClick(self, button)
 	if(button == "RightButton") then
 		local collected = collectgarbage('count')
 		collectgarbage('collect')
-		OnEnter(self)
+		dataobj.OnEnter(self)
 		GameTooltip:AddLine('\n')
 		GameTooltip:AddDoubleLine('Garbage Collected:', formats(collected - collectgarbage('count')))
 		GameTooltip:Show()
 	else
-		ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, 'MiniMapTracking', 0, self:GetHeight())
+		if(self:GetName() == 'MiniMapTracking' or self:GetName() == 'MiniMapTrackingButton') then
+			ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, 'MiniMapTracking', 0, self:GetHeight())
+		else
+			InterfaceOptionsFrame_OpenToFrame('pStats')
+		end
 		GameTooltip:Hide()
 	end
 end
@@ -70,22 +93,16 @@ local function OnMouseWheel(self, dir)
 end
 
 if(select(4, GetBuildInfo()) >= 3e4) then
-	MiniMapTrackingButton:EnableMouseWheel(true)
+	MiniMapTrackingButton:EnableMouseWheel()
 	MiniMapTrackingButton:RegisterForClicks('AnyUp')
 	MiniMapTrackingButton:SetScript('OnMouseWheel', OnMouseWheel)
-	MiniMapTrackingButton:SetScript('OnClick', OnClick)
-	MiniMapTrackingButton:SetScript('OnEnter', OnEnter)
-	MiniMapTrackingButton:SetScript('OnLeave', function()
-		GameTooltip:SetClampedToScreen(true)
-		GameTooltip:Hide()
-	end)
+	MiniMapTrackingButton:SetScript('OnClick', dataobj.OnClick)
+	MiniMapTrackingButton:SetScript('OnEnter', dataobj.OnEnter)
+	MiniMapTrackingButton:SetScript('OnLeave', dataobj.OnLeave)
 else
-	MiniMapTracking:EnableMouseWheel(true)
+	MiniMapTracking:EnableMouseWheel()
 	MiniMapTracking:SetScript('OnMouseWheel', OnMouseWheel)
-	MiniMapTracking:SetScript('OnMouseUp', OnClick)
-	MiniMapTracking:SetScript('OnEnter', OnEnter)
-	MiniMapTracking:SetScript('OnLeave', function()
-		GameTooltip:SetClampedToScreen(true)
-		GameTooltip:Hide()
-	end)
+	MiniMapTracking:SetScript('OnMouseUp', dataobj.OnClick)
+	MiniMapTracking:SetScript('OnEnter', dataobj.OnEnter)
+	MiniMapTracking:SetScript('OnLeave', dataobj.OnLeave)
 end
