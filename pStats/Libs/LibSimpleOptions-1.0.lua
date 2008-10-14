@@ -1,6 +1,6 @@
 --[[
 Name: LibSimpleOptions-1.0
-Revision: $Rev: 81443 $
+Revision: $Rev: 79549 $
 Author(s): ckknight (ckknight@gmail.com)
 Website: http://ckknight.wowinterface.com/
 Description: A library to provide a way to easily create controls for Blizzard's options system
@@ -8,7 +8,7 @@ License: MIT
 ]]
 
 local MAJOR_VERSION = "LibSimpleOptions-1.0"
-local MINOR_VERSION = tonumber(("$Revision: 81443 $"):match("(%d+)"))
+local MINOR_VERSION = tonumber(("$Revision: 79549 $"):match("(%d+)"))
 
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub") end
 
@@ -268,18 +268,18 @@ do
 	--     [optional] okayFunc: Called when the okay button is pressed<br/>
 	--     [optional] cancelFunc: Called when the cancel button is pressed<br/>
 	--     [optional] defaultFunc: Called when the default button is pressed
-	-- @usage panel:MakeSlider(
-	--     'name', 'Range',
-	--     'description', 'Specify your tooltip description',
-	--     'minText', '0%',
-	--     'maxText', '100%',
-	--     'minValue', 0,
-	--     'maxValue', 1,
-	--     'step', 0.05,
-	--     'default', 0.5,
-	--     'current', db.currentRange,
-	--     'setFunc', function(value) db.currentRange = value end,
-	--     'currentTextFunc', function(value) return ("%.0f%%"):format(value * 100) end
+	-- @usage panel:MakeSlider(<br/>
+	--     'name', 'Range',<br/>
+	--     'description', 'Specify your tooltip description',<br/>
+	--     'minText', '0%',<br/>
+	--     'maxText', '100%',<br/>
+	--     'minValue', 0,<br/>
+	--     'maxValue', 1,<br/>
+	--     'step', 0.05,<br/>
+	--     'default', 0.5,<br/>
+	--     'current', db.currentRange,<br/>
+	--     'setFunc', function(value) db.currentRange = value end,<br/>
+	--     'currentTextFunc', function(value) return ("%.0f%%"):format(value * 100) end<br/>
 	-- )
 	-- @return the Slider
 	function panelMeta:MakeSlider(...)
@@ -382,42 +382,19 @@ end
 do
 	local function dropDown_SetValue(self, value)
 		self.value = value
-		UIDropDownMenu_SetSelectedValue(self, value)
 		self.changeFunc(value)
-	end
-	local helper__num, helper__values
-	local function helper()
-		local value, text = helper__values[helper__num], helper__values[helper__num+1]
-		if value == nil then
-			helper__num, helper__values = nil, nil
-			return nil
-		end
-		helper__num = helper__num + 2
-		return value, text
-	end
-	local function get_iter(values)
-		if type(values) == "function" then
-			return values
-		end
-		helper__num = 1
-		helper__values = values
-		return helper
-	end
-	local SetValue_wrapper
-	if WotLK then
-		function SetValue_wrapper(self, ...)
-			return dropDown_SetValue(...)
-		end
-	else
-		SetValue_wrapper = dropDown_SetValue
+		UIDropDownMenu_SetSelectedValue(self, value)
 	end
 	local function dropDown_menu(self)
-		for value, text in get_iter(self.values) do
+		for i = 1, #self.values, 2 do
+			local value = self.values[i]
+			local text = self.values[i+1]
+
 			local info = UIDropDownMenu_CreateInfo()
 			info.text = text
 			info.value = value
 			info.checked = self.value == value
-			info.func = SetValue_wrapper
+			info.func = self.SetValue
 			info.arg1 = self
 			info.arg2 = value
 			UIDropDownMenu_AddButton(info)
@@ -439,17 +416,17 @@ do
 	--     [optional] okayFunc: Called when the okay button is pressed<br/>
 	--     [optional] cancelFunc: Called when the cancel button is pressed<br/>
 	--     [optional] defaultFunc: Called when the default button is pressed
-	-- @usage panel:MakeDropDown(
-	--     'name', 'Choose',
-	--     'description', 'Specify your tooltip description',
-	--     'values', {
-	--         'ONE', "One",
-	--         'TWO', "Two",
-	--         'THREE', "Three",
-	--      },
-	--     'default', 'ONE',
-	--     'current', db.choice,
-	--     'setFunc', function(value) db.choice = value end,
+	-- @usage panel:MakeDropDown(<br/>
+	--     'name', 'Choose',<br/>
+	--     'description', 'Specify your tooltip description',<br/>
+	--     'values', {<br/>
+	--         'ONE', "One",<br/>
+	--         'TWO', "Two",<br/>
+	--         'THREE', "Three",<br/>
+	--      },<br/>
+	--     'default', 'ONE',<br/>
+	--     'current', db.choice,<br/>
+	--     'setFunc', function(value) db.choice = value end,<br/>
 	-- )
 	-- @return the DropDown frame
 	function panelMeta:MakeDropDown(...)
@@ -458,31 +435,29 @@ do
 			error(("name must be %q, got %q (%s)"):format("string", type(args.name), tostring(args.name)), 2)
 		elseif type(args.description) ~= "string" then
 			error(("description must be %q, got %q (%s)"):format("string", type(args.description), tostring(args.description)), 2)
-		elseif type(args.values) ~= "function" then
-			if type(args.values) ~= "table" then
-				error(("values must be %q, got %q (%s)"):format("table", type(args.values), tostring(args.values)), 2)
-			elseif #args.values%2 ~= 0 then
-				error(("values must have an even number of items, got %d"):format(#args.values), 2)
+		elseif type(args.values) ~= "table" then
+			error(("values must be %q, got %q (%s)"):format("table", type(args.values), tostring(args.values)), 2)
+		elseif #args.values%2 ~= 0 then
+			error(("values must have an even number of items, got %d"):format(#args.values), 2)
+		end
+		for i = 1, #args.values, 2 do
+			local k, v = args.values[i], args.values[2]
+			if type(k) ~= "string" and type(k) ~= "number" then
+				error(("values' keys must be %q or %q, got %q (%s)"):format("string", "number", type(k), tostring(k)))
+			elseif type(v) ~= "string" then
+				error(("values' values must be %q, got %q (%s)"):format("string", type(v), tostring(v)))
 			end
-			for i = 1, #args.values, 2 do
-				local k, v = args.values[i], args.values[2]
-				if type(k) ~= "string" and type(k) ~= "number" then
-					error(("values' keys must be %q or %q, got %q (%s)"):format("string", "number", type(k), tostring(k)))
-				elseif type(v) ~= "string" then
-					error(("values' values must be %q, got %q (%s)"):format("string", type(v), tostring(v)))
-				end
-				tmp[k] = v
-			end
+			tmp[k] = v
 		end
 		if type(args.default) ~= "number" and type(args.default) ~= "string" then
 			error(("default must be %q or %q, got %q (%s)"):format("number", "string", type(args.default), tostring(args.default)), 2)
-		elseif type(args.values) ~= "function" and not tmp[args.default] then
+		elseif not tmp[args.default] then
 			error(("default must be in values, %s is not"):format(tostring(args.default)), 2)
 		elseif not args.current == not args.getFunc then
 			error(("either current or getFunc must be supplied, but not both"), 2)
 		elseif args.current and type(args.current) ~= "string" and type(args.current) ~= "number" then
 			error(("current must be %q or %q, got %q (%s)"):format("string", "number", type(args.current), tostring(args.current)), 2)
-		elseif type(args.values) ~= "function" and args.current and not tmp[args.current] then
+		elseif args.current and not tmp[args.current] then
 			error(("current must be in values, %s is not"):format(tostring(args.current)), 2)
 		elseif args.getFunc and type(args.getFunc) ~= "function" then
 			error(("getFunc must be %q, got %q (%s)"):format("function", type(args.getFunc), tostring(args.getFunc)), 2)
@@ -507,12 +482,10 @@ do
 	
 		local dropDown = CreateFrame("Frame", name, self, "UIDropDownMenuTemplate")
 		self.controls[dropDown] = true
-		if args.name ~= "" then
-			local label = dropDown:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
-			label:SetText(args.name)
-			label:SetPoint("BOTTOMLEFT", dropDown, "TOPLEFT", 16, 3)
-		end
+		local label = dropDown:CreateFontString(nil, "BACKGROUND", "GameFontNormal")
+		label:SetText(args.name)
 		dropDown.tooltipText = args.description
+		label:SetPoint("BOTTOMLEFT", dropDown, "TOPLEFT", 16, 3)
 		dropDown.values = args.values
 		UIDropDownMenu_Initialize(dropDown, function()
 			dropDown_menu(dropDown)
@@ -524,7 +497,7 @@ do
 		end
 		local current
 		if args.getFunc then
-			dropDown.getFunc = args.getFunc
+			slider.getFunc = args.getFunc
 			current = args.getFunc()
 		else
 			current = args.current
@@ -557,10 +530,10 @@ do
 	--     name: What shows above the dropdown<br/>
 	--     description: What shows when hovering over the dropdown<br/>
 	--     func: What is called when the button is pressed
-	-- @usage panel:MakeButton(
-	--     'name', 'Click',
-	--     'description', 'Specify your tooltip description',
-	--     'func', function() DEFAULT_CHAT_FRAME:AddMessage("Clicked!") end
+	-- @usage panel:MakeButton(<br/>
+	--     'name', 'Click',<br/>
+	--     'description', 'Specify your tooltip description',<br/>
+	--     'func', function() DEFAULT_CHAT_FRAME:AddMessage("Clicked!") end<br/>
 	-- )
 	-- @return the Button
 	function panelMeta:MakeButton(...)
@@ -617,12 +590,12 @@ do
 	--     [optional] okayFunc: Called when the okay button is pressed<br/>
 	--     [optional] cancelFunc: Called when the cancel button is pressed<br/>
 	--     [optional] defaultFunc: Called when the default button is pressed
-	-- @usage panel:MakeToggle(
-	--     'name', 'Toggle',
-	--     'description', 'Specify your tooltip description',
-	--     'default', false,
-	--     'getFunc', function() return db.myToggle end
-	--     'setFunc', function(value) db.myToggle = value end
+	-- @usage panel:MakeToggle(<br/>
+	--     'name', 'Toggle',<br/>
+	--     'description', 'Specify your tooltip description',<br/>
+	--     'default', false,<br/>
+	--     'getFunc', function() return db.myToggle end<br/>
+	--     'setFunc', function(value) db.myToggle = value end<br/>
 	-- )
 	-- @return the CheckButton
 	function panelMeta:MakeToggle(...)
@@ -757,29 +730,29 @@ do
 	--     [optional] okayFunc: Called when the okay button is pressed<br />
 	--     [optional] cancelFunc: Called when the cancel button is pressed<br />
 	--     [optional] defaultFunc: Called when the default button is pressed
-	-- @usage panel:MakeColorPicker(
-	--     'name', 'Pick a color',
-	--     'description', 'Specify your tooltip description',
-	--     'hasAlpha', false,
-	--     'defaultR', 1,
-	--     'defaultG', 0.82,
-	--     'defaultB', 0,
-	--     'getFunc', function() return unpack(db.color) end
-	--     'setFunc', function(r, g, b) db.color[1], db.color[2], db.color[3] = r, g, b end
+	-- @usage panel:MakeColorPicker(<br/>
+	--     'name', 'Pick a color',<br/>
+	--     'description', 'Specify your tooltip description',<br/>
+	--     'hasAlpha', false,<br/>
+	--     'defaultR', 1,<br/>
+	--     'defaultG', 0.82,<br/>
+	--     'defaultB', 0,<br/>
+	--     'getFunc', function() return unpack(db.color) end<br/>
+	--     'setFunc', function(r, g, b) db.color[1], db.color[2], db.color[3] = r, g, b end<br/>
 	-- )
-	-- @usage panel:MakeColorPicker(
-	--     'name', 'Pick a color',
-	--     'description', 'Specify your tooltip description',
-	--     'hasAlpha', true,
-	--     'defaultR', 0,
-	--     'defaultG', 1,
-	--     'defaultB', 0,
-	--     'defaultA', 0.5,
-	--     'currentR', db.color2.r,
-	--     'currentG', db.color2.g,
-	--     'currentB', db.color2.b,
-	--     'currentA', db.color2.a,
-	--     'setFunc', function(r, g, b, a) db.color2.r, db.color2.g db.color2.b, db.color2.a = r, g, b, a end
+	-- @usage panel:MakeColorPicker(<br/>
+	--     'name', 'Pick a color',<br/>
+	--     'description', 'Specify your tooltip description',<br/>
+	--     'hasAlpha', true,<br/>
+	--     'defaultR', 0,<br/>
+	--     'defaultG', 1,<br/>
+	--     'defaultB', 0,<br/>
+	--     'defaultA', 0.5,<br/>
+	--     'currentR', db.color2.r,<br/>
+	--     'currentG', db.color2.g,<br/>
+	--     'currentB', db.color2.b,<br/>
+	--     'currentA', db.color2.a,<br/>
+	--     'setFunc', function(r, g, b, a) db.color2.r, db.color2.g db.color2.b, db.color2.a = r, g, b, a end<br/>
 	-- )
 	-- @return the color swatch
 	function panelMeta:MakeColorPicker(...)

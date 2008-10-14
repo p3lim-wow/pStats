@@ -73,7 +73,7 @@ function dataobj.OnClick(self, button)
 		GameTooltip:AddDoubleLine('Garbage Collected:', formats(collected - collectgarbage('count')))
 		GameTooltip:Show()
 	else
-		if(self:GetName() == 'MiniMapTracking' or self:GetName() == 'MiniMapTrackingButton') then
+		if(self:GetName() == 'MiniMapTrackingButton') then
 			ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, 'MiniMapTracking', 0, self:GetHeight())
 		else
 			InterfaceOptionsFrame_OpenToFrame('pStats')
@@ -92,17 +92,9 @@ local function OnMouseWheel(self, dir)
 	end
 end
 
-if(select(4, GetBuildInfo()) >= 3e4) then
-	MiniMapTrackingButton:EnableMouseWheel()
-	MiniMapTrackingButton:RegisterForClicks('AnyUp')
-	MiniMapTrackingButton:SetScript('OnMouseWheel', OnMouseWheel)
-	MiniMapTrackingButton:SetScript('OnClick', dataobj.OnClick)
-	MiniMapTrackingButton:SetScript('OnEnter', dataobj.OnEnter)
-	MiniMapTrackingButton:SetScript('OnLeave', dataobj.OnLeave)
-else
-	MiniMapTracking:EnableMouseWheel()
-	MiniMapTracking:SetScript('OnMouseWheel', OnMouseWheel)
-	MiniMapTracking:SetScript('OnMouseUp', dataobj.OnClick)
-	MiniMapTracking:SetScript('OnEnter', dataobj.OnEnter)
-	MiniMapTracking:SetScript('OnLeave', dataobj.OnLeave)
-end
+MiniMapTrackingButton:EnableMouseWheel()
+MiniMapTrackingButton:RegisterForClicks('AnyUp')
+MiniMapTrackingButton:SetScript('OnMouseWheel', OnMouseWheel)
+MiniMapTrackingButton:SetScript('OnClick', dataobj.OnClick)
+MiniMapTrackingButton:SetScript('OnEnter', dataobj.OnEnter)
+MiniMapTrackingButton:SetScript('OnLeave', dataobj.OnLeave)
