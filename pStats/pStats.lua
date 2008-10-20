@@ -8,21 +8,13 @@ end
 
 local dataobj, elapsed = LibStub:GetLibrary('LibDataBroker-1.1'):NewDataObject('Stats', {text = '2.0 MiB', icon = [=[Interface\AddOns\pStats\icon]=]}), 0.5
 
-CreateFrame('Frame'):SetScript('OnUpdate', function(self, al)
-	elapsed = elapsed + al
-	if(elapsed > 0.5) then
-		dataobj.text = formats(gcinfo())
-		elapsed = 0
-	end
-end)
-
 function dataobj.OnLeave()
 	GameTooltip:SetClampedToScreen(true)
 	GameTooltip:Hide()
 end
 
 function dataobj.OnEnter(self)
-	local db = pStatsDB
+	local db = pStatsDB or {colors = {0, 1, 1}, sorted = true}
 	local r, g, b = unpack(db.colors)
 	local down, up, latency = GetNetStats()
 	local fps = format('%.1f fps', GetFramerate())
@@ -98,3 +90,19 @@ MiniMapTrackingButton:SetScript('OnMouseWheel', OnMouseWheel)
 MiniMapTrackingButton:SetScript('OnClick', dataobj.OnClick)
 MiniMapTrackingButton:SetScript('OnEnter', dataobj.OnEnter)
 MiniMapTrackingButton:SetScript('OnLeave', dataobj.OnLeave)
+
+CreateFrame('Frame'):SetScript('OnUpdate', function(self, al)
+	elapsed = elapsed + al
+	if(elapsed > 0.5) then
+		dataobj.text = formats(gcinfo())
+		elapsed = 0
+	end
+end)
+
+SlashCmdList['PSTATS'] = function()
+	if(not IsAddOnLoaded('pStats_Config')) then
+		LoadAddOn('pStats_Config')
+	end
+	InterfaceOptionsFrame_OpenToCategory('pStats')
+end
+SLASH_PSTATS1 = '/pstats'
