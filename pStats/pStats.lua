@@ -68,7 +68,7 @@ function dataobj.OnClick(self, button)
 		if(self:GetName() == 'MiniMapTrackingButton') then
 			ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, 'MiniMapTracking', 0, self:GetHeight())
 		else
-			InterfaceOptionsFrame_OpenToFrame('pStats')
+			InterfaceOptionsFrame_OpenToCategory('pStats')
 		end
 		GameTooltip:Hide()
 	end
