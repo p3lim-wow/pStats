@@ -91,13 +91,16 @@ MiniMapTrackingButton:SetScript('OnClick', dataobj.OnClick)
 MiniMapTrackingButton:SetScript('OnEnter', dataobj.OnEnter)
 MiniMapTrackingButton:SetScript('OnLeave', dataobj.OnLeave)
 
-CreateFrame('Frame'):SetScript('OnUpdate', function(self, al)
+local dummy = CreateFrame('Frame', nil, InterfaceOptionsFrame)
+dummy:SetScript('OnUpdate', function(self, al)
 	elapsed = elapsed + al
 	if(elapsed > 0.5) then
 		dataobj.text = formats(gcinfo())
 		elapsed = 0
 	end
 end)
+
+dummy:SetScript('OnShow', function(self) if(not IsAddOnLoaded('pStats_Config')) then LoadAddOn('pStats_Config') end self:SetScript('OnShow', nil) end)
 
 SlashCmdList['PSTATS'] = function()
 	if(not IsAddOnLoaded('pStats_Config')) then
