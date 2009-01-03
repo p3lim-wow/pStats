@@ -1,3 +1,12 @@
+local elapsed = 0.5
+local addon = CreateFrame('Frame', nil, InterfaceOptionsFrame)
+local dataobj = LibStub:GetLibrary('LibDataBroker-1.1'):NewDataObject('Stats', {text = '2.0 MiB', icon = [=[Interface\AddOns\pStats\icon]=]})
+local defaults = {
+	colors = {0, 1, 1},
+	sorted = true,
+	hooked = true,
+}
+
 local function formats(value)
 	if(value > 999) then
 		return format('%.1f MiB', value / 1024)
@@ -5,8 +14,6 @@ local function formats(value)
 		return format('%.1f KiB', value)
 	end
 end
-
-local dataobj, elapsed = LibStub:GetLibrary('LibDataBroker-1.1'):NewDataObject('Stats', {text = '2.0 MiB', icon = [=[Interface\AddOns\pStats\icon]=]}), 0.5
 
 function dataobj.OnLeave()
 	GameTooltip:SetClampedToScreen(true)
@@ -52,10 +59,6 @@ function dataobj.OnEnter(self)
 	GameTooltip:Show()
 end
 
-local function collect(self)
-
-end
-
 function dataobj.OnClick(self, button)
 	if(button == "RightButton") then
 		local collected = collectgarbage('count')
@@ -74,7 +77,7 @@ function dataobj.OnClick(self, button)
 	end
 end
 
-local function OnMouseWheel(self, dir)
+function OnMouseWheel(self, dir)
 	GameTooltip:SetClampedToScreen(false)
 	local point, region, pointTo, x, y = GameTooltip:GetPoint()
 	if(dir > 0) then
@@ -84,15 +87,27 @@ local function OnMouseWheel(self, dir)
 	end
 end
 
-MiniMapTrackingButton:EnableMouseWheel()
-MiniMapTrackingButton:RegisterForClicks('AnyUp')
-MiniMapTrackingButton:SetScript('OnMouseWheel', OnMouseWheel)
-MiniMapTrackingButton:SetScript('OnClick', dataobj.OnClick)
-MiniMapTrackingButton:SetScript('OnEnter', dataobj.OnEnter)
-MiniMapTrackingButton:SetScript('OnLeave', dataobj.OnLeave)
+addon:SetScript('OnEvent', function(self, event, addon)
+	if(addon ~= 'pStats') then return end
 
-local dummy = CreateFrame('Frame', nil, InterfaceOptionsFrame)
-dummy:SetScript('OnUpdate', function(self, al)
+	pStatsDB = pStatsDB or {}
+	for k,v in pairs(defaults) do
+		if(type(pStatsDB[k]) == 'nil') then
+			pStatsDB[k] = v
+		end
+	end
+
+	if(pStatsDB.hooked) then
+		MiniMapTrackingButton:EnableMouseWheel()
+		MiniMapTrackingButton:RegisterForClicks('AnyUp')
+		MiniMapTrackingButton:SetScript('OnMouseWheel', OnMouseWheel)
+		MiniMapTrackingButton:SetScript('OnClick', dataobj.OnClick)
+		MiniMapTrackingButton:SetScript('OnEnter', dataobj.OnEnter)
+		MiniMapTrackingButton:SetScript('OnLeave', dataobj.OnLeave)
+	end
+end)
+
+addon:SetScript('OnUpdate', function(self, al)
 	elapsed = elapsed + al
 	if(elapsed > 0.5) then
 		dataobj.text = formats(gcinfo())
@@ -100,7 +115,8 @@ dummy:SetScript('OnUpdate', function(self, al)
 	end
 end)
 
-dummy:SetScript('OnShow', function(self) if(not IsAddOnLoaded('pStats_Config')) then LoadAddOn('pStats_Config') end self:SetScript('OnShow', nil) end)
+addon:SetScript('OnShow', function(self) if(not IsAddOnLoaded('pStats_Config')) then LoadAddOn('pStats_Config') end self:SetScript('OnShow', nil) end)
+addon:RegisterEvent('ADDON_LOADED')
 
 SlashCmdList['PSTATS'] = function()
 	if(not IsAddOnLoaded('pStats_Config')) then
