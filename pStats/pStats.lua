@@ -1,127 +1,58 @@
-local elapsed = 0.5
-local addon = CreateFrame('Frame', nil, InterfaceOptionsFrame)
-local dataobj = LibStub:GetLibrary('LibDataBroker-1.1'):NewDataObject('Stats', {text = '2.0 MiB', icon = [=[Interface\AddOns\pStats\icon]=]})
-local defaults = {
-	colors = {0, 1, 1},
-	sorted = true,
-	hooked = true,
-}
+local function GetClassColors()
+	local _, enClass = UnitClass('player')
+	local colorTable = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[enClass] or RAID_CLASS_COLORS[enClass]
 
-local function formats(value)
+	return colorTable.r, colorTable.g, colorTable.b
+end
+
+local function ReformatValue(value)
 	if(value > 999) then
-		return format('%.1f MiB', value / 1024)
+		return string.format('%.1f MiB', value / 1024)
 	else
-		return format('%.1f KiB', value)
+		return string.format('%.1f KiB', value)
 	end
 end
 
-function dataobj.OnLeave()
-	GameTooltip:SetClampedToScreen(true)
-	GameTooltip:Hide()
-end
-
-function dataobj.OnEnter(self)
-	local db = pStatsDB or {colors = {0, 1, 1}, sorted = true}
-	local r, g, b = unpack(db.colors)
-	local down, up, latency = GetNetStats()
-	local fps = format('%.1f fps', GetFramerate())
-	local net = format('%d ms', latency)
+local function OnEnter(self)
+	local r, g, b = GetClassColors()
+	local _, _, latency = GetNetStats()
+	local addons, total = {}, 0
 
 	GameTooltip:SetOwner(self, 'ANCHOR_BOTTOMLEFT', 0, self:GetHeight())
 	GameTooltip:ClearLines()
-	GameTooltip:AddDoubleLine(fps, net, r, g, b, r, g, b)
+	GameTooltip:AddDoubleLine(string.format('%.1f fps', GetFramerate()), string.format('%d ms', latency), r, g, b, r, g, b)
 	GameTooltip:AddLine('\n')
 
-	local addons, entry, total = {}, {}, 0
 	UpdateAddOnMemoryUsage()
 
-	for i = 1, GetNumAddOns() do
-		if(IsAddOnLoaded(i)) then
-			entry = {GetAddOnInfo(i), GetAddOnMemoryUsage(i)}
-			table.insert(addons, entry)
-			total = total + GetAddOnMemoryUsage(i)
+	for index = 1, GetNumAddOns() do
+		if(IsAddOnLoaded(index)) then
+			local memoryUsage = GetAddOnMemoryUsage(index)
+			table.insert(addons, {GetAddOnInfo(index), memoryUsage})
+			total = total + memoryUsage
 		end
 	end
 
-	if(db.sorted) then
-		table.sort(addons, (function(a, b) return a[2] > b[2] end))
-	end
+	table.sort(addons, function(a,b) return a[2] > b[2] end)
 
-	for i,entry in pairs(addons) do
-		GameTooltip:AddDoubleLine(entry[1], formats(entry[2]), 1, 1, 1)
+	for key, value in next, addons do
+		GameTooltip:AddDoubleLine(value[1], ReformatValue(value[2]), 1, 1, 1)
 	end
 
 	GameTooltip:AddLine('\n')
-	GameTooltip:AddDoubleLine('User Addon Memory Usage:', formats(total), r, g, b, r, g, b)
-	GameTooltip:AddDoubleLine('Default UI Memory Usage:', formats(gcinfo() - total), r, g, b, r, g, b)
-	GameTooltip:AddDoubleLine('Total Memory Usage:', formats(gcinfo()), r, g, b, r, g, b)
-
+	GameTooltip:AddDoubleLine('User AddOn memory usage:', ReformatValue(total), r, g, b, r, g, b)
+	GameTooltip:AddDoubleLine('Default UI memory usage:', ReformatValue(gcinfo() - total), r, g, b, r, g, b)
+	GameTooltip:AddDoubleLine('Total memory usage:', ReformatValue(gcinfo()), r, g, b, r, g, b)
 	GameTooltip:Show()
 end
 
-function dataobj.OnClick(self, button)
-	if(button == "RightButton") then
-		local collected = collectgarbage('count')
-		collectgarbage('collect')
-		dataobj.OnEnter(self)
-		GameTooltip:AddLine('\n')
-		GameTooltip:AddDoubleLine('Garbage Collected:', formats(collected - collectgarbage('count')))
-		GameTooltip:Show()
-	else
-		if(self:GetName() == 'MiniMapTrackingButton') then
-			ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, 'MiniMapTracking', 0, self:GetHeight())
-		else
-			InterfaceOptionsFrame_OpenToCategory('pStats')
-		end
+local function OnClick(self)
+	if(GameTooltip:GetOwner() == self) then
 		GameTooltip:Hide()
 	end
+
+	ToggleDropDownMenu(1, nil, MiniMapTrackingDropDown, 'MiniMapTracking')
 end
 
-function OnMouseWheel(self, dir)
-	GameTooltip:SetClampedToScreen(false)
-	local point, region, pointTo, x, y = GameTooltip:GetPoint()
-	if(dir > 0) then
-		GameTooltip:SetPoint(point, region, pointTo, x, y + (IsShiftKeyDown() and 30 or 15))
-	else
-		GameTooltip:SetPoint(point, region, pointTo, x, y - (IsShiftKeyDown() and 30 or 15))
-	end
-end
-
-addon:SetScript('OnEvent', function(self, event, addon)
-	if(addon ~= 'pStats') then return end
-
-	pStatsDB = pStatsDB or {}
-	for k,v in pairs(defaults) do
-		if(type(pStatsDB[k]) == 'nil') then
-			pStatsDB[k] = v
-		end
-	end
-
-	if(pStatsDB.hooked) then
-		MiniMapTrackingButton:EnableMouseWheel()
-		MiniMapTrackingButton:RegisterForClicks('AnyUp')
-		MiniMapTrackingButton:SetScript('OnMouseWheel', OnMouseWheel)
-		MiniMapTrackingButton:SetScript('OnClick', dataobj.OnClick)
-		MiniMapTrackingButton:SetScript('OnEnter', dataobj.OnEnter)
-		MiniMapTrackingButton:SetScript('OnLeave', dataobj.OnLeave)
-	end
-end)
-
-addon:SetScript('OnUpdate', function(self, al)
-	elapsed = elapsed + al
-	if(elapsed > 0.5) then
-		dataobj.text = formats(gcinfo())
-		elapsed = 0
-	end
-end)
-
-addon:SetScript('OnShow', function(self) if(not IsAddOnLoaded('pStats_Config')) then LoadAddOn('pStats_Config') end self:SetScript('OnShow', nil) end)
-addon:RegisterEvent('ADDON_LOADED')
-
-SlashCmdList['PSTATS'] = function()
-	if(not IsAddOnLoaded('pStats_Config')) then
-		LoadAddOn('pStats_Config')
-	end
-	InterfaceOptionsFrame_OpenToCategory('pStats')
-end
-SLASH_PSTATS1 = '/pstats'
+MiniMapTrackingButton:SetScript('OnClick', OnClick)
+MiniMapTrackingButton:SetScript('OnEnter', OnEnter)
