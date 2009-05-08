@@ -1,3 +1,14 @@
+--[[
+
+ Copyright (c) 2009, Adrian L Lange
+ All rights reserved.
+
+ You're allowed to use this addon, free of monetary charge,
+ but you are not allowed to modify, alter, or redistribute
+ this addon without express, written permission of the author.
+
+--]]
+
 local function GetClassColors()
 	local _, enClass = UnitClass('player')
 	local colorTable = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[enClass] or RAID_CLASS_COLORS[enClass]
