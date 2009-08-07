@@ -1,7 +1,0 @@
-## Interface: 30100
-## Author: p3lim
-## Version: 30100.wowi:revision
-## Title: |cffff6000p|rStats
-## Notes: Replaces the tooltip on MinimapTracking with a more informative one
-
-pStats.lua
