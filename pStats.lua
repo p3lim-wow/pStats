@@ -1,6 +1,6 @@
 --[[
 
-	Copyright (c) 2009, Adrian L Lange
+	Copyright (c) 2009-2010, Adrian L Lange
 	All rights reserved.
 
 	You're allowed to use this addon, free of monetary charge,
@@ -9,64 +9,46 @@
 
 --]]
 
-local playerClass = select(2, UnitClass('player'))
+local class = select(2, UnitClass('player'))
 
-local function classColors()
-	local colorTable = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[playerClass] or RAID_CLASS_COLORS[playerClass]
-	return colorTable.r, colorTable.g, colorTable.b
-end
-
-local function lagColors(value)
-	if(value < 1e2) then
-		return 0, 1, 0
-	elseif(value < 3e2) then
-		return 1, 1, 0
+local function FormattedLatency()
+	local _, _, latency = GetNetStats()
+	if(latency > PERFORMANCEBAR_MEDIUM_LATENCY) then
+		return latency, 1, 0, 0
+	elseif(latency > PERFORMANCEBAR_LOW_LATENCY) then
+		return latency, 1, 1, 0
 	else
-		return 1, 0, 0
+		return latency, 0, 1, 0
 	end
 end
 
-local function formatValue(value)
+local function FormatValue(value)
 	if(value > 1e3) then
-		return string.format('%.1f m', value / 1024)
+		return string.format('%.1f |cffff0000m|r', value / 1024)
 	else
-		return string.format('%d k', value)
+		return string.format('%d |cff00ff00k|r', value)
 	end
 end
-
-local usage
-local addons = {}
-local total = 0
 
 MiniMapTrackingButton:SetScript('OnEnter', function(self)
-	local r, g, b = classColors()
-	local _, _, lag = GetNetStats()
-	local lagR, lagG, lagB = lagColors(lag)
+	local colors = RAID_CLASS_COLORS[class]
+	local latency, r, g, b = FormattedLatency()
+	local total = 0
 
-	GameTooltip:ClearLines()
-	GameTooltip:SetOwner(self, 'ANCHOR_BOTTOMLEFT', 0, self:GetHeight())
-	GameTooltip:AddDoubleLine(date('%a %d %b'), string.format('%d', lag), r, g, b, lagR, lagG, lagB)
+	GameTooltip:SetOwner(self, 'ANCHOR_BOTTOMLEFT')
+	GameTooltip:AddDoubleLine(date('%a %d %b'), string.format('%d', latency), colors.r, colors.g, colors.b, r, g, b)
 	GameTooltip:AddLine('\n')
-
-	total = 0
-	table.wipe(addons)
 
 	UpdateAddOnMemoryUsage()
 	for index = 1, GetNumAddOns() do
 		if(IsAddOnLoaded(index)) then
-			usage = GetAddOnMemoryUsage(index)
-			table.insert(addons, {GetAddOnInfo(index), usage})
+			local usage = GetAddOnMemoryUsage(index)
+			GameTooltip:AddDoubleLine(GetAddOnInfo(index), FormatValue(usage), 1, 1, 1)
 			total = total + usage
 		end
 	end
 
-	table.sort(addons, function(a,b) return a[2] > b[2] end)
-
-	for _, addon in pairs(addons) do
-		GameTooltip:AddDoubleLine(addon[1], formatValue(addon[2]), 1, 1, 1)
-	end
-
 	GameTooltip:AddLine('\n')
-	GameTooltip:AddDoubleLine('Total Usage:', formatValue(total), r, g, b, r, g, b)
+	GameTooltip:AddDoubleLine('Total Usage:', FormatValue(total), colors.r, colors.g, colors.b)
 	GameTooltip:Show()
 end)
